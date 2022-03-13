@@ -161,15 +161,15 @@ SELECT
 FROM
 	rental
 	JOIN inventory
-		ON rental.inventory_id = inventory.inventory_id
+	ON rental.inventory_id = inventory.inventory_id
 	JOIN film
-		ON inventory.film_id = film.film_id
+	ON inventory.film_id = film.film_id
 	JOIN customer
-		ON rental.customer_id = customer.customer_id
+	ON rental.customer_id = customer.customer_id
 	JOIN address
-		ON customer.address_id = address.address_id
+	ON customer.address_id = address.address_id
 	JOIN city
-		ON address.city_id = city.city_id
+	ON address.city_id = city.city_id
 WHERE
 	to_char(rental.rental_date::date, 'DD') > '16'
 	AND
@@ -211,35 +211,35 @@ Notes after I wrote the asnwer to the question
  
 Here is my answer:*/
 
+WITH t1 AS (SELECT to_char(rental.rental_ts::date, 'MM') AS MONTH,
+	 	   to_char(rental.rental_ts::date, 'DD') AS DAY,
+	 	   CAST(to_char(rental.rental_ts::date, 'YYYY-MM-DD') AS DATE) AS date,
+        	   count(rental.rental_id) AS rental_count,
+	 	   AVG(film.rental_rate) AS avg_rate
+   		   FROM rental
+	 	   JOIN inventory
+		   ON rental.inventory_id = inventory.inventory_id
+	 	   JOIN film
+		   ON inventory.film_id = film.film_id
+	 	   JOIN payment
+		   ON rental.rental_id = payment.rental_id
+   		   GROUP BY to_char(rental.rental_ts::date, 'MM'),
+	 		    to_char(rental.rental_ts::date, 'DD'),
+	 		    CAST(to_char(rental.rental_ts::date, 'YYYY-MM-DD') AS DATE)
+	 	   HAVING to_char(rental_ts::date, 'MM') = '08'
+   		   ORDER BY to_char(rental.rental_ts::date, 'DD'))
 SELECT 
 	dates.date as DATE,
-	COALESCE(t.rental_count,0) AS n_rentals,
-	COALESCE(ROUND(AVG(t.rental_count) OVER(ORDER BY dates.date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW),2),0) AS RA7_rentals,
-	COALESCE(ROUND(t.avg_rate,2),0) AS avg_rental_rate,
-	COALESCE(ROUND(AVG(t.avg_rate) OVER(ORDER BY dates.date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW),2),0) AS RA7_rental_rate
-FROM
-  	(SELECT to_char(rental.rental_ts::date, 'MM') AS MONTH,
-	 		to_char(rental.rental_ts::date, 'DD') AS DAY,
-	 		CAST(to_char(rental.rental_ts::date, 'YYYY-MM-DD') AS DATE) AS date,
-        	count(rental.rental_id) AS rental_count,
-	 		AVG(film.rental_rate) AS avg_rate
-   		FROM rental
-	 	JOIN inventory
-		ON rental.inventory_id = inventory.inventory_id
-	 	JOIN film
-		ON inventory.film_id = film.film_id
-	 	JOIN payment
-		ON rental.rental_id = payment.rental_id
-   		GROUP BY to_char(rental.rental_ts::date, 'MM'),
-	 			 to_char(rental.rental_ts::date, 'DD'),
-	 			 CAST(to_char(rental.rental_ts::date, 'YYYY-MM-DD') AS DATE)
-	 	HAVING to_char(rental_ts::date, 'MM') = '08'
-   		ORDER BY to_char(rental.rental_ts::date, 'DD')) t
+	COALESCE(t1.rental_count,0) AS n_rentals,
+	COALESCE(ROUND(AVG(t1.rental_count) OVER(ORDER BY dates.date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW),2),0) AS RA7_rentals,
+	COALESCE(ROUND(t1.avg_rate,2),0) AS avg_rental_rate,
+	COALESCE(ROUND(AVG(t1.avg_rate) OVER(ORDER BY dates.date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW),2),0) AS RA7_rental_rate
+FROM t1
 RIGHT JOIN dates
-	  ON t.date = dates.date
+	ON t1.date = dates.date
 GROUP BY dates.date,
-		 t.rental_count,
-		 t.avg_rate
+	t1.rental_count,
+	t1.avg_rate
 HAVING 
 	to_char(dates.date::date, 'YYYY') = '2020'
 	AND 
@@ -247,18 +247,78 @@ HAVING
 ORDER BY 
 	dates.date ASC;
 	
-	
-	
+
+
 /*BONUS TIME!!!!
 
-I want to start this portion of the assessmnet by taking a look at what insights these questions can give us
+Firt thing that we could do is get an idea on the performance of each genres. Which genres are most in demand and how much are we making?
+We can use this data to see if there is a genre we can invest more into. I wrote a query below to see
+ 1) number of rentals per genre
+ 2) total_sales for those rentals
+ 3) the avg rate per rental. 
+ 
+ Notes about the query:
+ We can see that the Sports Genre seems to be really popular for this database in terms of rentals and makes us the most maount of sales
+ In terms of avg_rate per rental sports ia also among the highest. 
+ We can see tha New/Comdey have higher rates per rental. 
+ 
+ What can we do with this info? 
+ Can we add a bigger catalog of options for our most popular genres and our most efficient in terms of rate per rental so New/Comdey?
+ The data supports that our customers really like sports or animation movies so can we capitalize on that interest.
+ 
+ Also for some of our least popular genres can we increase rental rates make a bit more money per rental. Or maybe even offer a rental bundle. Honestly there are ony so
+ many sports movies. Can we get our customers interested in more of the other Genres so they continue to rent from us even after they have seen every sports movie possible?
+ 
+*/
+SELECT 
+	category.name,
+	count(rental.rental_id) AS n_rentals,
+	sum(payment.amount) AS total_sales,
+	ROUND((SUM(payment.amount)/COUNT(rental.rental_id)),2) AS avg_rate
+FROM
+	category
+	JOIN film_category
+	ON category.category_id = film_category.category_id
+	JOIN film
+	ON film_category.film_id = film.film_id	 
+	JOIN Inventory
+	ON film.film_id = inventory.film_id
+        JOIN rental
+	ON inventory.inventory_id = rental.inventory_id
+	JOIN payment
+	ON rental.rental_id = payment.rental_id
+GROUP BY 
+	category.name
+ORDER BY 
+	n_rentals DESC;	
 
-QUESTION 1:
-This question tells us about the database honestly but not much about what actors may be very popular among a certain store or certain area. If we adjust the query to include a rental_id we can see what actors are very popular amoing move renters.
+name		n_rentals	total_sales	avg_rate
+Sports		1179		5314.21		4.51
+Animation	1171		4686.25		4.00
+Action		1112		4375.85		3.94
+Sci-Fi		1101		4756.98		4.32
+Family		1096		4226.07		3.86
+Drama		1060		4587.39		4.33
+Documentary	1050		4217.52		4.02
+Foreign		1033		4270.67		4.13
+Games		969		4281.33		4.42
+Children 	945		3655.55		3.87
+New		945		4361.57		4.62
+Comedy		941		4383.58		4.66
+Classics	939		3639.59		3.88
+Horror		846		3722.54		4.40
+Travel		837		3549.64		4.24
+Music		825		3387.77		4.11
+/*
+Besides increasing the performance of our Genres we should also look at the performance of our storers. If we can find hgh performer stores we can see 
+what they are doing and try to implement those strategies on our lower performance stores.
 
-EX:
+Notes about the query:
 
+ 
 
+ 
+*/
 	
 
 
