@@ -129,7 +129,7 @@ GROUP BY
 ORDER BY 
 	week DESC;
 	
-/*Question 4: Write a query that returns the distinct number of active customers that rented PG-rated movies at least twice in the 
+/*Question 4️⃣: Write a query that returns the distinct number of active customers that rented PG-rated movies at least twice in the 
 last 15 days of a month in both July 2020 and August 2020. Exclude any customers from Dallas.
 
 
@@ -182,7 +182,7 @@ WHERE
 	film.rating = 'PG';
 	
 /*
-Question 5: Movie rentals are sometimes heavily concentrated on certain calendar days. 
+Question 5️⃣: Movie rentals are sometimes heavily concentrated on certain calendar days. 
 This daily variance might make it more difficult to identify trends or gain any actionable insights. 
 To counteract this, we might want to use a rolling sum/average instead. 
 For each of the days in August 2020, write a query that shows the rolling average of rental 
@@ -310,17 +310,66 @@ Horror		846		3722.54		4.40
 Travel		837		3549.64		4.24
 Music		825		3387.77		4.11
 /*
-Besides increasing the performance of our Genres we should also look at the performance of our storers. If we can find hgh performer stores we can see 
-what they are doing and try to implement those strategies on our lower performance stores.
+Something else we could do is find our top and bottom customers. 
 
-Notes about the query:
+We can reward our top customers for supporting us. They can also help us acquire more customers if we reward them for spreading a referral offer or sometihng.
+Since these are our top customers they will probabaly be more willing to share their experience to friends and family
 
- 
+We can also try to get our bottom customers to come see us more. Can we offer them a coupn or special that will get them back in our store.
 
- 
+For this query I want to focus on a specific store since ideally we do this on a store by store basis. Just a side note we could also probabaly do this by district 
 */
-	
+/* TOP 10*/
+SELECT
+	customer.customer_id,
+	customer.email,
+	count(rental.rental_id)
+FROM
+	customer
+	JOIN rental
+	ON customer.customer_id = rental.customer_id
+	JOIN store
+	ON customer.store_id = store.store_id
+GROUP BY 
+	customer.customer_id,
+	customer.email,
+	store.store_id
+HAVING
+	store.store_id = 1
+ORDER BY
+	count(rental.rental_id) DESC
+LIMIT 10;
 
+/* BOTTOM 10*/
+SELECT
+	customer.customer_id,
+	customer.email,
+	count(rental.rental_id)
+FROM
+	customer
+	JOIN rental
+	ON customer.customer_id = rental.customer_id
+	JOIN store
+	ON customer.store_id = store.store_id
+GROUP BY 
+	customer.customer_id,
+	customer.email,
+	store.store_id
+HAVING
+	store.store_id = 1
+ORDER BY
+	count(rental.rental_id) ASC
+LIMIT 10;
+
+/*
+The last thing I want to talk about in this bonus section is the Rolling average.
+
+As you can when running the Query there are a good amount of days in August when we have no rentals. For example from 
+2020-08-04 to 2020-08-16 there wasn't a single rental. 
+
+Of course this is historical data but we can use this to forecast low traffic or low rental business day. When we have instances of those days what can we do to get customers insie? 
+Maybe we can do weekday specials or bundles or discunts on days with forecasted low traffic. That will allow us to add some revenue to days when we are showing ZERO.
+*/
 
 
 	
