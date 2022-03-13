@@ -105,10 +105,10 @@ Notes after I wrote the asnwer to the question
 	ORDER BY 
 		week desc;
  - With this query I also only receive only 12 weeks in the entire dataset so I went ahead with my query. 
- - I added a distinct to the count of customer_id. The thought process is that N-rentals andN-customers were matching 
+ - I added a distinct to the count of customer_id. The thought process is that n_rentals and n_customers were matching 
  which makes sense but it made more sense to me is that we wanted to see the ammount of customers who rented not the amount of rentals again basically. 
- Distinct should tell us how many customers made up those rentals for the week and the revenue
- - Using extract vs to_char resulted in different buckets. For example with to_char 35 was the last week vs 34. I stuck with extract since it returnd week as a numeric type.
+ Distinct should tell us how many unique customers made up those rentals for the week and the revenue
+ - Using extract vs to_char resulted in different buckets. For example with to_char 35 was the last week vs 34. I stuck with extract since it returned week as a numeric type.
  
 Here is my answer:*/
 SELECT
@@ -266,8 +266,9 @@ We can use this data to see if there is a genre we can invest more into. I wrote
  Can we add a bigger catalog of options for our most popular genres and our most efficient in terms of rate per rental so New/Comdey?
  The data supports that our customers really like sports or animation movies so can we capitalize on that interest.
  
- Also for some of our least popular genres can we increase rental rates make a bit more money per rental. Or maybe even offer a rental bundle. Honestly there are ony so
- many sports movies. Can we get our customers interested in more of the other Genres so they continue to rent from us even after they have seen every sports movie possible?
+ Also for some of our least popular genres can we increase rental rates and make a bit more money per rental. Or maybe even offer a rental bundle. Honestly there are only so
+ many sports movies. Can we get our customers interested in more of the other Genres so they continue to rent from us even after they have seen every sports movie possible even though
+ customers can also rerent?
  
 */
 SELECT 
@@ -362,13 +363,13 @@ ORDER BY
 LIMIT 10;
 
 /*
-The last thing I want to talk about in this bonus section is the Rolling average.
+The last thing I want to talk about in this bonus section is the Rolling average from Question 5
 
-As you can when running the Query there are a good amount of days in August when we have no rentals. For example from 
+As you can see when running the Query there are a good amount of days in August when we have no rentals. For example from 
 2020-08-04 to 2020-08-16 there wasn't a single rental. 
 
-Of course this is historical data but we can use this to forecast low traffic or low rental business day. When we have instances of those days what can we do to get customers insie? 
-Maybe we can do weekday specials or bundles or discunts on days with forecasted low traffic. That will allow us to add some revenue to days when we are showing ZERO.
+Of course this is historical data but we can use this to forecast low traffic or low rental business days. When we have instances of those days what can we do to get customers insie? 
+Maybe we can do weekday specials or bundles or discounts on days with forecasted low traffic. That will allow us to add some revenue to days when we are showing ZERO.
 */
 
 
