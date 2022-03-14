@@ -109,10 +109,11 @@ Notes after I wrote the asnwer to the question
  which makes sense but it made more sense to me is that we wanted to see the ammount of customers who rented not the amount of rentals again basically. 
  Distinct should tell us how many unique customers made up those rentals for the week and the revenue
  - Using extract vs to_char resulted in different buckets. For example with to_char 35 was the last week vs 34. I stuck with extract since it returned week as a numeric type.
+ - Also on the sqlpad I got an out of memeory error. I ran this query with a similar database on pgadmin and it ran fine.
  
 Here is my answer:*/
 SELECT
-	extract('week' from rental.rental_date) as week,
+	extract('week' from rental.rental_ts) as week,
 	count(rental.rental_id) AS n_rentals,
 	sum(payment.amount)AS rental_rev,
 	count(distinct(rental.customer_id)) AS n_customers
@@ -171,11 +172,11 @@ FROM
 	JOIN city
 	ON address.city_id = city.city_id
 WHERE
-	to_char(rental.rental_date::date, 'DD') > '16'
+	to_char(rental.rental_ts::date, 'DD') > '16'
 	AND
-	(to_char(rental.rental_date::date, 'MM') = '07'
+	(to_char(rental.rental_ts::date, 'MM') = '07'
 	 OR
-	 to_char(rental.rental_date::date, 'MM') = '08')
+	 to_char(rental.rental_ts::date, 'MM') = '08')
 	AND
 	city.city != 'Dallas'
 	AND
